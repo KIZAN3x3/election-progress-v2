@@ -106,7 +106,7 @@ async function renderPasswords(){
   const prefItems=PREFECTURES.map(p=>{
     const set=pwMap[p.code]?'🔐 設定済み':'未設定';
     const btn=pwMap[p.code]?'変更':'設定';
-    return '<div class="settings-item"><div class="settings-item-info"><div class="settings-item-name">'+p.name+'</div><div class="settings-item-sub">'+set+' <span style="color:var(--text3);font-size:10px">'+p.code+'</span></div></div><button class="btn btn-secondary btn-sm" onclick="openSetPwModal(''+p.code+'',''+p.name+'')">'+btn+'</button></div>';
+    return '<div class="settings-item"><div class="settings-item-info"><div class="settings-item-name">'+p.name+'</div><div class="settings-item-sub">'+set+' <span style="color:var(--text3);font-size:10px">'+p.code+'</span></div></div><button class="btn btn-secondary btn-sm set-pw-btn" data-code="'+p.code+'" data-name="'+p.name+'">'+btn+'</button></div>';
   }).join('');
   document.getElementById('pwList').innerHTML=
     '<div style="background:var(--surface2);border-radius:var(--radius-sm);padding:18px;margin-bottom:18px">'+
@@ -120,6 +120,10 @@ async function renderPasswords(){
     '</div>'+
     '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;letter-spacing:.08em">個別設定</div>'+
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px">'+prefItems+'</div>';
+  document.getElementById('pwList').addEventListener('click',function(e){
+    const btn=e.target.closest('.set-pw-btn');
+    if(btn)openSetPwModal(btn);
+  },{once:true});
 }
 function openModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalOverlay').style.display='flex';}
 function closeModal(){document.getElementById('modalOverlay').style.display='none';}
@@ -128,7 +132,7 @@ function openSetPwModal(el){
   var html='<h3>'+name+' のパスワード設定</h3>';
   html+='<div class="form-group"><label>新しいパスワード</label><input type="password" id="newPw" placeholder="パスワードを入力"></div>';
   html+='<div class="form-group"><label>確認</label><input type="password" id="newPwConfirm" placeholder="もう一度入力"></div>';
-  html+='<div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">キャンセル</button><button class="btn btn-primary" onclick="savePw(''+code+'',''+name+'')">保存</button></div>';
+  html+='<div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">キャンセル</button><button class="btn btn-primary" data-code="'+code+'" data-name="'+name+'" onclick="savePw(this.dataset.code,this.dataset.name)">保存</button></div>';
   openModal(html);
 }
 async function savePw(code,name){const pw=document.getElementById('newPw').value,pw2=document.getElementById('newPwConfirm').value;if(!pw){showToast('パスワードを入力してください',true);return;}if(pw!==pw2){showToast('パスワードが一致しません',true);return;}const hash=await hashPassword(pw);await sbFetch('prefectures','POST',{code,name,password_hash:hash});closeModal();showToast(`${name}のパスワードを設定しました`);renderPasswords();}
@@ -142,7 +146,7 @@ function previewBulk(){
     '<div style="background:var(--surface);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;font-size:12px;line-height:1.8">'+rows+'</div>'+
     '<div class="modal-footer">'+
     '<button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>'+
-    '<button class="btn btn-primary" onclick="saveBulkSlug(''+suffix+'')">この内容で全県設定</button>'+
+    '<button class="btn btn-primary" data-suffix="'+suffix+'" onclick="saveBulkSlug(this.dataset.suffix)">この内容で全県設定</button>'+
     '</div>');
 }
 
