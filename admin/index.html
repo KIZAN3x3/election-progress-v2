@@ -123,7 +123,14 @@ async function renderPasswords(){
 }
 function openModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalOverlay').style.display='flex';}
 function closeModal(){document.getElementById('modalOverlay').style.display='none';}
-function openSetPwModal(code,name){openModal(`<h3>${name} のパスワード設定</h3><div class="form-group"><label>新しいパスワード</label><input type="password" id="newPw" placeholder="パスワードを入力"></div><div class="form-group"><label>確認</label><input type="password" id="newPwConfirm" placeholder="もう一度入力"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">キャンセル</button><button class="btn btn-primary" onclick="savePw('${code}','${name}')">保存</button></div>`);}
+function openSetPwModal(el){
+  var code=el.dataset.code, name=el.dataset.name;
+  var html='<h3>'+name+' のパスワード設定</h3>';
+  html+='<div class="form-group"><label>新しいパスワード</label><input type="password" id="newPw" placeholder="パスワードを入力"></div>';
+  html+='<div class="form-group"><label>確認</label><input type="password" id="newPwConfirm" placeholder="もう一度入力"></div>';
+  html+='<div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">キャンセル</button><button class="btn btn-primary" onclick="savePw(''+code+'',''+name+'')">保存</button></div>';
+  openModal(html);
+}
 async function savePw(code,name){const pw=document.getElementById('newPw').value,pw2=document.getElementById('newPwConfirm').value;if(!pw){showToast('パスワードを入力してください',true);return;}if(pw!==pw2){showToast('パスワードが一致しません',true);return;}const hash=await hashPassword(pw);await sbFetch('prefectures','POST',{code,name,password_hash:hash});closeModal();showToast(`${name}のパスワードを設定しました`);renderPasswords();}
 
 function previewBulk(){
