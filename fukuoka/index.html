@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>選挙準備管理 - 福岡県</title>
+<style>
+:root {
+  --bg:#0f0e0c;--surface:#1a1710;--surface2:#221f18;--border:#2e2820;
+  --accent:#f77f00;--accent2:#e05c00;--text:#e8e0d0;--text2:#b5a890;--text3:#857060;
+  --done:#2ecc71;--doing:#f39c12;--none:#2e2820;--skip:#2e2820;--skip-text:#8a7a6a;
+  --danger:#e74c3c;--radius:12px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Hiragino Sans','Noto Sans JP',sans-serif;min-height:100vh;}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{background:var(--surface);border-radius:var(--radius);padding:40px;width:100%;max-width:380px;}
+.login-logo{font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;}
+.login-pref{font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.login-sub{color:var(--text3);font-size:13px;margin-bottom:28px;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:600;letter-spacing:.06em;}
+.form-group input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 12px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;}
+.form-group input:focus{border-color:var(--accent);}
+.btn{padding:10px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-primary{background:var(--accent);color:white;width:100%;padding:12px;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-secondary{background:var(--surface2);color:var(--text2);}
+.btn-secondary:hover{color:var(--text);}
+.btn-danger{background:transparent;color:var(--danger);}
+.btn-danger:hover{background:rgba(231,76,60,.1);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.login-error{color:var(--danger);font-size:13px;margin-top:8px;text-align:center;}
+.app-header{padding:14px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.app-header h1{font-size:16px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.pref-badge{background:var(--surface2);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--accent);font-weight:600;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.stat-pill{background:var(--surface2);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:5px;}
+.stat-dot{width:7px;height:7px;border-radius:50%;}
+.tabs{display:flex;gap:4px;padding:14px 20px 0;}
+.tab{padding:8px 16px;border-radius:10px 10px 0 0;font-size:13px;font-weight:600;cursor:pointer;color:var(--text3);background:transparent;border:none;transition:all .2s;}
+.tab.active{background:var(--surface);color:var(--text);}
+.tab:hover:not(.active){color:var(--text2);}
+.content{background:var(--surface);border-radius:0 var(--radius) var(--radius) var(--radius);margin:0 20px 20px;padding:20px;min-height:calc(100vh - 155px);}
+.candidate-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
+.candidate-card{background:var(--surface2);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;border:1px solid transparent;position:relative;}
+.candidate-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.candidate-card.dragging{opacity:.4;}
+.candidate-card.drag-over{border-color:var(--accent2);background:#2a2018;}
+.drag-handle{position:absolute;top:10px;right:10px;color:var(--text3);cursor:grab;font-size:13px;}
+.card-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-bottom:10px;overflow:hidden;}
+.card-avatar img{width:100%;height:100%;object-fit:cover;}
+.card-name{font-size:14px;font-weight:700;margin-bottom:2px;}
+.card-yomi{font-size:10px;color:var(--text3);margin-bottom:4px;}
+.card-type{font-size:10px;background:var(--surface);padding:2px 7px;border-radius:10px;color:var(--accent);display:inline-block;margin-bottom:7px;}
+.card-catch{font-size:11px;color:var(--text2);font-style:italic;margin-bottom:8px;line-height:1.4;}
+.card-progress{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.card-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--done));border-radius:2px;transition:width .3s;}
+.card-progress-label{font-size:10px;color:var(--text3);margin-top:3px;}
+.back-btn{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:18px;background:none;border:none;}
+.back-btn:hover{color:var(--text);}
+.detail-header{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start;}
+.detail-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0;overflow:hidden;}
+.detail-avatar img{width:100%;height:100%;object-fit:cover;}
+.detail-info h2{font-size:20px;font-weight:700;}
+.detail-info .yomi{color:var(--text3);font-size:11px;margin-bottom:4px;}
+.detail-info .etype{color:var(--accent);font-size:11px;background:var(--surface2);padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:5px;}
+.detail-info .catch{color:var(--text2);font-style:italic;font-size:13px;}
+.detail-section-label{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text3);margin:16px 0 7px;text-transform:uppercase;}
+.detail-item-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:3px;cursor:pointer;transition:background .15s;}
+.detail-item-row:hover{background:#2a2018;}
+.detail-item-status{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
+.detail-item-status.status-0{background:var(--none);}
+.detail-item-status.status-1{background:var(--doing);}
+.detail-item-status.status-2{background:var(--done);}
+.detail-item-status.status-3{background:var(--skip);}
+.detail-item-name{font-size:13px;flex:1;}
+.detail-item-assignee{font-size:11px;color:var(--text3);}
+.detail-item-memo{font-size:11px;color:var(--text3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.heatmap-wrap{overflow-x:auto;}
+.heatmap-table{border-collapse:separate;border-spacing:3px;width:max-content;}
+.heatmap-table th{font-size:11px;color:var(--text3);font-weight:500;padding:4px 6px;white-space:nowrap;text-align:left;}
+.heatmap-table th.item-col{min-width:50px;max-width:68px;writing-mode:vertical-rl;height:75px;vertical-align:bottom;padding-bottom:5px;}
+.heatmap-table td.candidate-name{font-size:12px;font-weight:600;white-space:nowrap;padding-right:8px;}
+.heatmap-table td.candidate-name span{display:block;font-size:10px;color:var(--text3);font-weight:400;}
+.cell{width:28px;height:28px;border-radius:5px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;position:relative;}
+.cell:hover{transform:scale(1.15);z-index:10;}
+.cell.status-0{background:var(--none);}
+.cell.status-1{background:var(--doing);}
+.cell.status-2{background:var(--done);}
+.cell.status-3{background:var(--skip);overflow:hidden;}
+.cell.status-3::after{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:var(--skip-text);transform:rotate(-45deg);}
+.cell-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3);}
+.cell.status-1 .cell-dot{background:rgba(255,255,255,.6);}
+.cell.status-2 .cell-dot{background:rgba(255,255,255,.7);}
+.cell.status-3 .cell-dot{display:none;}
+.legend{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);}
+.legend-dot{width:11px;height:11px;border-radius:3px;}
+.settings-section{margin-bottom:24px;}
+.settings-section h3{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px;letter-spacing:.08em;text-transform:uppercase;}
+.settings-list{display:flex;flex-direction:column;gap:5px;}
+.settings-item{background:var(--surface2);border-radius:var(--radius-sm);padding:11px 13px;display:flex;align-items:center;gap:9px;}
+.settings-item.dragging{opacity:.4;}
+.settings-item.drag-over{border:1px solid var(--accent);}
+.settings-item-info{flex:1;}
+.settings-item-name{font-size:13px;font-weight:600;}
+.settings-item-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.settings-item-actions{display:flex;gap:5px;}
+.btn-add{display:flex;align-items:center;gap:7px;margin-top:9px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.modal{background:var(--surface2);border-radius:var(--radius);width:100%;max-width:460px;max-height:90vh;overflow-y:auto;padding:24px;}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:16px;}
+.modal-title-sub{font-size:12px;color:var(--text3);margin-bottom:16px;margin-top:-10px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.sns-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.form-group select,.form-group textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 12px;font-size:13px;font-family:inherit;outline:none;}
+.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);}
+.form-group textarea{resize:vertical;min-height:66px;}
+.form-group select option{background:var(--surface2);}
+.photo-upload-area{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;cursor:pointer;transition:border-color .15s;}
+.photo-upload-area:hover{border-color:var(--accent);}
+.photo-upload-area p{font-size:11px;color:var(--text3);}
+.status-selector{display:flex;gap:5px;}
+.status-btn{flex:1;padding:8px 4px;border-radius:var(--radius-sm);border:2px solid transparent;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s;}
+.status-btn.s0{background:var(--none);color:var(--text3);}
+.status-btn.s1{background:rgba(243,156,18,.2);color:var(--doing);}
+.status-btn.s2{background:rgba(46,204,113,.2);color:var(--done);}
+.status-btn.s3{background:var(--skip);color:var(--skip-text);}
+.status-btn.s0.active{border-color:var(--text3);}
+.status-btn.s1.active{border-color:var(--doing);background:rgba(243,156,18,.3);}
+.status-btn.s2.active{border-color:var(--done);background:rgba(46,204,113,.3);}
+.status-btn.s3.active{border-color:var(--skip-text);}
+.modal-footer{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;}
+.empty-state{text-align:center;padding:46px 20px;}
+.empty-state .icon{font-size:38px;margin-bottom:12px;}
+.empty-state p{color:var(--text3);font-size:13px;margin-bottom:14px;}
+@media(max-width:640px){
+  .app-header{padding:10px 14px;}
+  .tabs{padding:10px 14px 0;}
+  .content{margin:0 14px 14px;padding:13px;}
+  .candidate-grid{grid-template-columns:1fr 1fr;}
+  .form-row,.sns-grid{grid-template-columns:1fr;}
+  .detail-header{flex-direction:column;}
+  .stat-pill{display:none;}
+}
+</style>
+</head>
+<body>
+<div id="loginScreen" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">🗳 選挙準備管理</div>
+    <div class="login-pref" id="loginPrefName"></div>
+    <div class="login-sub">パスワードを入力してログインしてください</div>
+    <div class="form-group">
+      <label>パスワード</label>
+      <input type="password" id="prefPassword" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')loginPref()">
+    </div>
+    <button class="btn btn-primary" onclick="loginPref()">ログイン</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div id="appScreen" style="display:none">
+  <div class="app-header">
+    <h1>🗳 選挙準備管理</h1>
+    <div class="pref-badge" id="prefBadge"></div>
+    <div class="header-right">
+      <div id="headerStats"></div>
+      <button class="btn btn-secondary" onclick="exportExcel()" style="font-size:11px;padding:5px 9px">📥 Excel</button>
+      <button class="btn btn-secondary" onclick="logout()" style="font-size:11px;padding:5px 9px">ログアウト</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('candidates')">候補者</button>
+    <button class="tab" onclick="switchTab('heatmap')">一覧表</button>
+    <button class="tab" onclick="switchTab('settings')">設定</button>
+  </div>
+  <div class="content" id="mainContent"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modalBox" onclick="event.stopPropagation()"></div>
+</div>
+
+<script src="../config.js"></script>
+<script>
+const PREF_CODE = 'fukuoka';
+const PREF_NAME = '福岡県';
+const DEFAULT_POLITICAL_ITEMS=['党の立候補者タスキ','2連のぼり','2連ポスター','名刺','DIY号外','リーフレット（二つ折り・後援会）','看板（後援会事務所）','看板（個人事務所）','後援会加入募集シート','後援会紹介者シート','Youtube広告','2連はちまき','広報車音源'];
+const DEFAULT_ELECTION_ITEMS=['公設ポスター','証紙ビラ','選挙はがき','候補者タスキ','選挙公報','選挙カーはちまき','選挙事務所看板','ショート動画用バナー','ショート動画','投票依頼バナー','カウントダウンバナー','毎日スケジュールバナー','個人演説会告知バナー','街頭演説会告知バナー','当選バナー'];
+const ELECTION_TYPES=['市議会議員','区議会議員','県議会議員','町議会議員','村議会議員','その他'];
+let APP={candidates:[],items:{political:[...DEFAULT_POLITICAL_ITEMS],election:[...DEFAULT_ELECTION_ITEMS]},progress:{}};
+let currentTab='candidates',currentCandidateId=null,dragSrcIndex=null,itemDragSrc=null;
+
+document.getElementById('loginPrefName').textContent = PREF_NAME;
+document.title = `選挙準備管理 - ${PREF_NAME}`;
+
+async function sbFetch(table,method='GET',body=null,query=''){
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`,{
+    method,
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':method==='POST'?'resolution=merge-duplicates':''},
+    body:body?JSON.stringify(body):null
+  });
+  if(method==='GET')return res.json();
+  return res;
+}
+async function hashPassword(pw){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw+'sanseito_salt'));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function loginPref(){
+  const pw=document.getElementById('prefPassword').value;
+  document.getElementById('loginError').textContent='';
+  if(!pw){document.getElementById('loginError').textContent='パスワードを入力してください';return;}
+  showLoading(true);
+  try{
+    const rows=await sbFetch('prefectures','GET',null,`?code=eq.${PREF_CODE}`);
+    if(!rows||!rows.length||!rows[0].password_hash){
+      showLoading(false);
+      document.getElementById('loginError').textContent='このエリアはまだ設定されていません。管理者にお問い合わせください。';
+      return;
+    }
+    const hash=await hashPassword(pw);
+    if(hash!==rows[0].password_hash){
+      showLoading(false);
+      document.getElementById('loginError').textContent='パスワードが違います';
+      return;
+    }
+    await loadData();
+    showApp();
+  }catch(e){showLoading(false);document.getElementById('loginError').textContent='接続エラーが発生しました';}
+}
+
+function logout(){
+  APP={candidates:[],items:{political:[...DEFAULT_POLITICAL_ITEMS],election:[...DEFAULT_ELECTION_ITEMS]},progress:{}};
+  currentTab='candidates';currentCandidateId=null;
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('prefPassword').value='';
+}
+
+async function loadData(){
+  showLoading(true);
+  try{
+    const[cands,progs,settings]=await Promise.all([
+      sbFetch('v2_candidates','GET',null,`?pref_code=eq.${PREF_CODE}&order=sort_order.asc`),
+      sbFetch('v2_progress','GET',null,`?pref_code=eq.${PREF_CODE}&limit=10000`),
+      sbFetch('v2_settings','GET',null,`?pref_code=eq.${PREF_CODE}`)
+    ]);
+    APP.candidates=(cands||[]).map(r=>({id:r.id,...r.data}));
+    APP.progress={};
+    (progs||[]).forEach(r=>{APP.progress[r.key]=r.data;});
+    if(settings&&settings.length)APP.items=settings[0].items;
+    else APP.items={political:[...DEFAULT_POLITICAL_ITEMS],election:[...DEFAULT_ELECTION_ITEMS]};
+  }catch(e){showToast('データ読み込みエラー',true);}
+  showLoading(false);
+}
+
+async function saveData(){
+  try{
+    for(let i=0;i<APP.candidates.length;i++){
+      const{id,...data}=APP.candidates[i];
+      await sbFetch('v2_candidates','POST',{id,pref_code:PREF_CODE,data,sort_order:i});
+    }
+    await sbFetch('v2_settings','POST',{pref_code:PREF_CODE,items:APP.items});
+  }catch(e){showToast('保存エラー',true);}
+}
+
+async function saveProgress(key,value){
+  try{
+    await sbFetch('v2_progress','POST',{key,pref_code:PREF_CODE,data:value});
+    APP.progress[key]=value;
+  }catch(e){showToast('保存エラー',true);}
+}
+
+function showApp(){
+  showLoading(false);
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  document.getElementById('prefBadge').textContent=PREF_NAME;
+  render();
+}
+
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function getInitial(n){return n?n.slice(0,1):'?';}
+function getProgress(cid){
+  const all=[...APP.items.political,...APP.items.election];
+  if(!all.length)return 0;
+  let done=0,skip=0;
+  all.forEach(item=>{const s=(APP.progress[`${cid}__${item}`]||{}).status||0;if(s===2)done++;else if(s===3)skip++;});
+  const eff=all.length-skip;
+  return eff<=0?100:Math.round(done/eff*100);
+}
+function getStatusCount(){
+  let done=0,doing=0,none=0,skip=0;
+  APP.candidates.forEach(c=>{
+    [...APP.items.political,...APP.items.election].forEach(item=>{
+      const s=(APP.progress[`${c.id}__${item}`]||{}).status||0;
+      if(s===2)done++;else if(s===1)doing++;else if(s===3)skip++;else none++;
+    });
+  });
+  return{done,doing,none,skip};
+}
+
+function render(){
+  renderStats();
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['candidates','heatmap','settings'][i]===currentTab));
+  if(currentTab==='candidates'){if(currentCandidateId)renderCandidateDetail();else renderCandidates();}
+  else if(currentTab==='heatmap')renderHeatmap();
+  else renderSettings();
+}
+
+function renderStats(){
+  const sc=getStatusCount();
+  document.getElementById('headerStats').innerHTML=`
+    <div class="stat-pill"><div class="stat-dot" style="background:var(--done)"></div>${sc.done}完了</div>
+    <div class="stat-pill"><div class="stat-dot" style="background:var(--doing)"></div>${sc.doing}進行中</div>`;
+}
+
+function switchTab(tab){currentTab=tab;currentCandidateId=null;render();}
+
+function renderCandidates(){
+  const el=document.getElementById('mainContent');
+  if(!APP.candidates.length){el.innerHTML=`<div class="empty-state"><div class="icon">👤</div><p>候補者がまだいません<br>設定タブから追加してください</p><button class="btn btn-secondary" onclick="switchTab('settings')">設定へ</button></div>`;return;}
+  el.innerHTML=`<div class="candidate-grid" id="candidateGrid">${APP.candidates.map((c,i)=>candidateCardHTML(c,i)).join('')}</div>`;
+  setupDragDrop();
+}
+
+function candidateCardHTML(c,i){
+  const prog=getProgress(c.id);
+  const av=c.photo?`<img src="${c.photo}">`:`<span>${getInitial(c.name)}</span>`;
+  return `<div class="candidate-card" draggable="true" data-index="${i}" data-id="${c.id}" onclick="onCardClick(event,'${c.id}')">
+    <div class="drag-handle" onclick="event.stopPropagation()">⠿</div>
+    <div class="card-avatar">${av}</div>
+    <div class="card-name">${c.name||'（名前未設定）'}</div>
+    <div class="card-yomi">${c.yomi||''}</div>
+    ${c.electionType?`<div class="card-type">${c.electionType}</div>`:''}
+    ${c.catchphrase?`<div class="card-catch">「${c.catchphrase}」</div>`:''}
+    <div class="card-progress"><div class="card-progress-bar" style="width:${prog}%"></div></div>
+    <div class="card-progress-label">${prog}% 完了</div>
+  </div>`;
+}
+
+function onCardClick(e,id){if(dragSrcIndex!==null)return;currentCandidateId=id;renderCandidateDetail();}
+
+function renderCandidateDetail(){
+  const c=APP.candidates.find(x=>x.id===currentCandidateId);if(!c)return;
+  const prog=getProgress(c.id);
+  const av=c.photo?`<img src="${c.photo}">`:`<span>${getInitial(c.name)}</span>`;
+  document.getElementById('mainContent').innerHTML=`
+    <button class="back-btn" onclick="currentCandidateId=null;render()">← 候補者一覧に戻る</button>
+    <div class="detail-header">
+      <div class="detail-avatar">${av}</div>
+      <div class="detail-info">
+        <div class="yomi">${c.yomi||''}</div>
+        <h2>${c.name||'（名前未設定）'}</h2>
+        ${c.electionType?`<div class="etype">${c.electionType}</div>`:''}
+        ${c.catchphrase?`<div class="catch">「${c.catchphrase}」</div>`:''}
+        <div style="margin-top:7px;width:140px">
+          <div class="card-progress"><div class="card-progress-bar" style="width:${prog}%"></div></div>
+          <div class="card-progress-label">${prog}% 完了</div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-section-label">政治活動</div>
+    ${APP.items.political.map(item=>detailItemRowHTML(c.id,item)).join('')}
+    <div class="detail-section-label">選挙活動</div>
+    ${APP.items.election.map(item=>detailItemRowHTML(c.id,item)).join('')}`;
+}
+
+function detailItemRowHTML(cid,item){
+  const p=APP.progress[`${cid}__${item}`]||{status:0,assignee:'',memo:''};
+  return `<div class="detail-item-row" onclick="openCellModal('${cid}','${item.replace(/'/g,"\\'")}')">
+    <div class="detail-item-status status-${p.status}"></div>
+    <div class="detail-item-name">${item}</div>
+    ${p.assignee?`<div class="detail-item-assignee">👤 ${p.assignee}</div>`:''}
+    ${p.memo?`<div class="detail-item-memo">📝 ${p.memo}</div>`:''}
+  </div>`;
+}
+
+function renderHeatmap(){
+  const el=document.getElementById('mainContent');
+  if(!APP.candidates.length){el.innerHTML=`<div class="empty-state"><div class="icon">📊</div><p>候補者を追加すると一覧表が表示されます</p></div>`;return;}
+  const pI=APP.items.political,eI=APP.items.election;
+  el.innerHTML=`
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--none)"></div>未着手</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--doing)"></div>進行中</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--done)"></div>完了</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--skip)"></div>不要</div>
+    </div>
+    <div class="heatmap-wrap">
+      <table class="heatmap-table">
+        <thead><tr><th style="min-width:80px"></th>${pI.map(i=>`<th class="item-col" title="${i}">${i}</th>`).join('')}<th style="width:10px"></th>${eI.map(i=>`<th class="item-col" title="${i}">${i}</th>`).join('')}</tr></thead>
+        <tbody>${APP.candidates.map(c=>`<tr>
+          <td class="candidate-name">${c.name}<span>${c.electionType||''}</span></td>
+          ${pI.map(item=>cellHTML(c.id,item)).join('')}<td style="width:10px"></td>${eI.map(item=>cellHTML(c.id,item)).join('')}
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+function cellHTML(cid,item){
+  const p=APP.progress[`${cid}__${item}`]||{status:0};
+  return `<td><div class="cell status-${p.status}" onclick="openCellModal('${cid}','${item.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')" title="${item}"><div class="cell-dot"></div></div></td>`;
+}
+
+function renderSettings(){
+  const el=document.getElementById('mainContent');
+  const cL=APP.candidates.map((c,i)=>`
+    <div class="settings-item" draggable="true" data-index="${i}">
+      <div class="drag-handle" style="position:static;margin-right:3px;cursor:grab">⠿</div>
+      <div class="settings-item-info"><div class="settings-item-name">${c.name||'（名前未設定）'}</div><div class="settings-item-sub">${c.electionType||''} ${c.yomi?'/ '+c.yomi:''}</div></div>
+      <div class="settings-item-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openCandidateForm('${c.id}')">編集</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCandidate('${c.id}')">削除</button>
+      </div>
+    </div>`).join('');
+  const iL=(type)=>APP.items[type].map((item,i)=>`
+    <div class="settings-item" draggable="true" data-type="${type}" data-index="${i}">
+      <div class="drag-handle" style="position:static;margin-right:3px;cursor:grab">⠿</div>
+      <div class="settings-item-info"><div class="settings-item-name">${item}</div></div>
+      <div class="settings-item-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openEditItemModal('${type}',${i})">編集</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('${type}',${i})">削除</button>
+      </div>
+    </div>`).join('');
+  el.innerHTML=`
+    <div class="settings-section"><h3>候補者管理</h3><div class="settings-list" id="candSettingsList">${cL}</div><button class="btn btn-primary btn-add" onclick="openCandidateForm(null)">＋ 候補者を追加</button></div>
+    <div class="settings-section"><h3>項目管理 — 政治活動</h3><div class="settings-list" id="pItemList">${iL('political')}</div><button class="btn btn-secondary btn-add" onclick="openAddItemModal('political')">＋ 項目を追加</button></div>
+    <div class="settings-section"><h3>項目管理 — 選挙活動</h3><div class="settings-list" id="eItemList">${iL('election')}</div><button class="btn btn-secondary btn-add" onclick="openAddItemModal('election')">＋ 項目を追加</button></div>`;
+  setupCandSettingsDragDrop();setupItemDragDrop();
+}
+
+function openModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalOverlay').style.display='flex';}
+function closeModal(){document.getElementById('modalOverlay').style.display='none';}
+function closeModalOnBg(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+
+function openCellModal(cid,item){
+  const p=APP.progress[`${cid}__${item}`]||{status:0,assignee:'',memo:''};
+  const c=APP.candidates.find(x=>x.id===cid);
+  openModal(`<h3>${item}</h3><div class="modal-title-sub">${c?c.name:''}</div>
+    <div class="form-group"><label>ステータス</label>
+      <div class="status-selector">${[0,1,2,3].map(s=>`<button class="status-btn s${s} ${p.status===s?'active':''}" onclick="selectStatus(this,${s})" data-status="${s}">${['未着手','進行中','完了','不要'][s]}</button>`).join('')}</div>
+    </div>
+    <div class="form-group"><label>担当者</label><input id="cellAssignee" value="${p.assignee||''}" placeholder="担当者名"></div>
+    <div class="form-group"><label>メモ</label><textarea id="cellMemo">${p.memo||''}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveCellModal('${cid}','${item.replace(/'/g,"\\'")}')">保存</button>
+    </div>`);
+}
+function selectStatus(btn,s){document.querySelectorAll('.status-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+async function saveCellModal(cid,item){
+  const statusEl=document.querySelector('.status-btn.active');
+  const val={status:statusEl?parseInt(statusEl.dataset.status):0,assignee:document.getElementById('cellAssignee').value.trim(),memo:document.getElementById('cellMemo').value.trim()};
+  await saveProgress(`${cid}__${item}`,val);closeModal();render();
+}
+
+function openCandidateForm(id){
+  const c=id?APP.candidates.find(x=>x.id===id):null;
+  const eOpts=ELECTION_TYPES.map(t=>`<option value="${t}" ${c&&c.electionType===t?'selected':''}>${t}</option>`).join('');
+  openModal(`<h3>${c?'候補者を編集':'候補者を追加'}</h3>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px">
+      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveCandidate('${id||''}')">保存</button>
+    </div>
+    <div class="form-group"><label>顔写真</label>
+      <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(event)">
+      <input type="hidden" id="photoData" value="${c&&c.photo?c.photo:''}">
+      <div class="photo-upload-area" onclick="event.stopPropagation();document.getElementById('photoInput').click()">
+        ${c&&c.photo?`<img id="photoPreview" src="${c.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;margin-bottom:7px">`:`<div id="photoPreview" style="font-size:32px;margin-bottom:7px">📷</div>`}
+        <p>タップして写真を選択</p>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>氏名 *</label><input id="f_name" value="${c?c.name:''}" placeholder="山田 太郎"></div>
+      <div class="form-group"><label>読み仮名</label><input id="f_yomi" value="${c?c.yomi:''}" placeholder="やまだ たろう"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>年齢</label><input id="f_age" value="${c?c.age:''}" placeholder="45"></div>
+      <div class="form-group"><label>性別</label><select id="f_gender"><option value="">未設定</option>${['男性','女性','その他'].map(g=>`<option value="${g}" ${c&&c.gender===g?'selected':''}>${g}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>選挙種類</label><select id="f_etype"><option value="">未設定</option>${eOpts}</select></div>
+      <div class="form-group"><label>選挙区</label><input id="f_area" value="${c?c.area:''}" placeholder="〇〇市第一選挙区"></div>
+    </div>
+    <div class="form-group"><label>肩書き・職業</label><input id="f_job" value="${c?c.job:''}" placeholder="会社経営者"></div>
+    <div class="form-group"><label>キャッチコピー</label><input id="f_catch" value="${c?c.catchphrase:''}" placeholder="未来を切り拓く！"></div>
+    <div class="form-group"><label>政策テーマ（カンマ区切り）</label><input id="f_policy" value="${c?c.policy:''}" placeholder="教育改革, 地域経済"></div>
+    <div class="form-group"><label>プロフィール</label><textarea id="f_profile">${c?c.profile:''}</textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>電話番号</label><input id="f_tel" value="${c?c.tel:''}" placeholder="090-XXXX-XXXX"></div>
+      <div class="form-group"><label>メール</label><input id="f_email" value="${c?c.email:''}" placeholder="example@mail.com"></div>
+    </div>
+    <div class="form-group"><label>事務所住所</label><input id="f_address" value="${c?c.address:''}" placeholder="〇〇市〇〇町X-X"></div>
+    <div class="form-group"><label>SNS</label>
+      <div class="sns-grid">
+        <input id="f_x" value="${c?c.sns_x:''}" placeholder="X URL">
+        <input id="f_ig" value="${c?c.sns_ig:''}" placeholder="Instagram URL">
+        <input id="f_yt" value="${c?c.sns_yt:''}" placeholder="YouTube URL">
+        <input id="f_tt" value="${c?c.sns_tt:''}" placeholder="TikTok URL">
+        <input id="f_fb" value="${c?c.sns_fb:''}" placeholder="Facebook URL">
+      </div>
+    </div>
+    <div class="form-group"><label>備考</label><textarea id="f_note">${c?c.note:''}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveCandidate('${id||''}')">保存</button>
+    </div>`);
+}
+
+let _eImg=null,_eScale=1,_eX=0,_eY=0,_eDrag=false,_eDragStart=null;
+function previewPhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{const img=new Image();img.onload=()=>{_eImg=img;openImageEditor();};img.src=ev.target.result;};
+  reader.readAsDataURL(file);
+}
+function openImageEditor(){
+  const ex=document.getElementById('imgEditorOverlay');if(ex)ex.remove();
+  const ov=document.createElement('div');ov.id='imgEditorOverlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`<div style="background:#1a1710;border-radius:12px;padding:20px;width:280px;max-width:95vw">
+    <h3 style="color:#e8e0d0;margin-bottom:12px;font-size:14px">写真を調整</h3>
+    <div style="position:relative;width:200px;height:200px;border-radius:50%;overflow:hidden;margin:0 auto 12px;background:#0f0e0c;cursor:grab" id="editorCanvas">
+      <canvas id="editorCvs" width="200" height="200" style="display:block"></canvas>
+    </div>
+    <div style="margin-bottom:10px"><label style="color:#857060;font-size:11px;display:block;margin-bottom:4px">拡大縮小</label>
+      <input type="range" id="editorScale" min="0.5" max="3" step="0.01" value="1" style="width:100%" oninput="onEditorScale(this.value)">
+    </div>
+    <div style="display:flex;gap:7px;justify-content:flex-end">
+      <button onclick="closeImageEditor()" style="padding:6px 12px;border-radius:7px;background:#221f18;color:#b5a890;border:none;cursor:pointer;font-size:12px">キャンセル</button>
+      <button onclick="confirmImageEditor()" style="padding:6px 12px;border-radius:7px;background:#f77f00;color:white;border:none;cursor:pointer;font-size:12px;font-weight:600">確定</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  const fit=Math.max(200/_eImg.width,200/_eImg.height);
+  _eScale=fit;_eX=(200-_eImg.width*fit)/2;_eY=(200-_eImg.height*fit)/2;
+  document.getElementById('editorScale').min=fit*0.8;document.getElementById('editorScale').value=fit;
+  drawEditor();
+  const cont=document.getElementById('editorCanvas');
+  cont.addEventListener('mousedown',startDragE);cont.addEventListener('touchstart',startDragE,{passive:true});
+  window.addEventListener('mousemove',moveDragE);window.addEventListener('touchmove',moveDragE,{passive:false});
+  window.addEventListener('mouseup',endDragE);window.addEventListener('touchend',endDragE);
+}
+function drawEditor(){const cvs=document.getElementById('editorCvs');if(!cvs||!_eImg)return;const ctx=cvs.getContext('2d');ctx.clearRect(0,0,200,200);ctx.drawImage(_eImg,_eX,_eY,_eImg.width*_eScale,_eImg.height*_eScale);}
+function onEditorScale(val){const ns=parseFloat(val),cx=100,cy=100;_eX=cx-(cx-_eX)*(ns/_eScale);_eY=cy-(cy-_eY)*(ns/_eScale);_eScale=ns;drawEditor();}
+function startDragE(e){_eDrag=true;const pt=e.touches?e.touches[0]:e;_eDragStart={x:pt.clientX-_eX,y:pt.clientY-_eY};}
+function moveDragE(e){if(!_eDrag)return;if(e.cancelable)e.preventDefault();const pt=e.touches?e.touches[0]:e;_eX=pt.clientX-_eDragStart.x;_eY=pt.clientY-_eDragStart.y;drawEditor();}
+function endDragE(){_eDrag=false;}
+function closeImageEditor(){const ov=document.getElementById('imgEditorOverlay');if(ov)ov.remove();window.removeEventListener('mousemove',moveDragE);window.removeEventListener('touchmove',moveDragE);window.removeEventListener('mouseup',endDragE);window.removeEventListener('touchend',endDragE);}
+function confirmImageEditor(){
+  const cvs=document.getElementById('editorCvs');
+  const out=document.createElement('canvas');out.width=200;out.height=200;
+  out.getContext('2d').drawImage(cvs,0,0,200,200,0,0,200,200);
+  const compressed=out.toDataURL('image/jpeg',.8);
+  closeImageEditor();
+  document.getElementById('photoData').value=compressed;
+  const prev=document.getElementById('photoPreview');
+  if(prev&&prev.tagName==='IMG')prev.src=compressed;
+  else if(prev)prev.outerHTML=`<img id="photoPreview" src="${compressed}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;margin-bottom:7px">`;
+}
+
+async function saveCandidate(id){
+  const name=document.getElementById('f_name').value.trim();
+  if(!name){alert('氏名は必須です');return;}
+  const data={name,yomi:document.getElementById('f_yomi').value.trim(),age:document.getElementById('f_age').value.trim(),gender:document.getElementById('f_gender').value,electionType:document.getElementById('f_etype').value,area:document.getElementById('f_area').value.trim(),job:document.getElementById('f_job').value.trim(),catchphrase:document.getElementById('f_catch').value.trim(),policy:document.getElementById('f_policy').value.trim(),profile:document.getElementById('f_profile').value.trim(),tel:document.getElementById('f_tel').value.trim(),email:document.getElementById('f_email').value.trim(),address:document.getElementById('f_address').value.trim(),sns_x:document.getElementById('f_x').value.trim(),sns_ig:document.getElementById('f_ig').value.trim(),sns_yt:document.getElementById('f_yt').value.trim(),sns_tt:document.getElementById('f_tt').value.trim(),sns_fb:document.getElementById('f_fb').value.trim(),note:document.getElementById('f_note').value.trim(),photo:document.getElementById('photoData').value};
+  if(id){const i=APP.candidates.findIndex(x=>x.id===id);if(i>=0)APP.candidates[i]={...APP.candidates[i],...data};}
+  else APP.candidates.push({id:genId(),...data});
+  await saveData();
+  document.getElementById('modalOverlay').style.display='none';
+  render();
+}
+
+async function deleteCandidate(id){
+  if(!confirm('この候補者を削除しますか？'))return;
+  await sbFetch('v2_candidates','DELETE',null,`?id=eq.${id}`);
+  const keys=Object.keys(APP.progress).filter(k=>k.startsWith(id+'__'));
+  for(const k of keys){await sbFetch('v2_progress','DELETE',null,`?key=eq.${encodeURIComponent(k)}`);delete APP.progress[k];}
+  APP.candidates=APP.candidates.filter(x=>x.id!==id);render();
+}
+
+function openAddItemModal(type){openModal(`<h3>項目を追加</h3><div class="form-group"><label>項目名</label><input id="newItemName" placeholder="新しい項目名"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">キャンセル</button><button class="btn btn-primary" onclick="addItem('${type}')">追加</button></div>`);}
+async function addItem(type){const name=document.getElementById('newItemName').value.trim();if(!name)return;APP.items[type].push(name);await saveData();closeModal();render();}
+function openEditItemModal(type,index){const cur=APP.items[type][index];openModal(`<h3>項目を編集</h3><div class="form-group"><label>項目名</label><input id="editItemName" value="${cur}"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">キャンセル</button><button class="btn btn-primary" onclick="saveEditItem('${type}',${index})">保存</button></div>`);}
+async function saveEditItem(type,index){
+  const newName=document.getElementById('editItemName').value.trim();if(!newName)return;
+  const oldName=APP.items[type][index];
+  for(const c of APP.candidates){
+    const ok=`${c.id}__${oldName}`,nk=`${c.id}__${newName}`;
+    if(APP.progress[ok]){await sbFetch('v2_progress','POST',{key:nk,pref_code:PREF_CODE,data:APP.progress[ok]});await sbFetch('v2_progress','DELETE',null,`?key=eq.${encodeURIComponent(ok)}`);APP.progress[nk]=APP.progress[ok];delete APP.progress[ok];}
+  }
+  APP.items[type][index]=newName;await saveData();closeModal();render();
+}
+async function deleteItem(type,index){
+  if(!confirm('この項目を削除しますか？'))return;
+  const item=APP.items[type][index];APP.items[type].splice(index,1);
+  const toDel=Object.keys(APP.progress).filter(k=>k.endsWith('__'+item));
+  for(const k of toDel){await sbFetch('v2_progress','DELETE',null,`?key=eq.${encodeURIComponent(k)}`);delete APP.progress[k];}
+  await saveData();render();
+}
+
+function setupDragDrop(){
+  const grid=document.getElementById('candidateGrid');if(!grid)return;
+  grid.addEventListener('dragstart',e=>{const card=e.target.closest('.candidate-card');if(!card)return;dragSrcIndex=parseInt(card.dataset.index);setTimeout(()=>card.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
+  grid.addEventListener('dragend',e=>{const card=e.target.closest('.candidate-card');if(card)card.classList.remove('dragging');grid.querySelectorAll('.candidate-card').forEach(c=>c.classList.remove('drag-over'));setTimeout(()=>{dragSrcIndex=null;},50);});
+  grid.addEventListener('dragover',e=>{e.preventDefault();const card=e.target.closest('.candidate-card');if(!card)return;grid.querySelectorAll('.candidate-card').forEach(c=>c.classList.remove('drag-over'));card.classList.add('drag-over');});
+  grid.addEventListener('dragleave',e=>{const card=e.target.closest('.candidate-card');if(card&&!card.contains(e.relatedTarget))card.classList.remove('drag-over');});
+  grid.addEventListener('drop',async e=>{e.preventDefault();const card=e.target.closest('.candidate-card');if(!card)return;card.classList.remove('drag-over');const ti=parseInt(card.dataset.index);if(dragSrcIndex===null||dragSrcIndex===ti)return;const[moved]=APP.candidates.splice(dragSrcIndex,1);APP.candidates.splice(ti,0,moved);dragSrcIndex=null;await saveData();render();});
+}
+function setupCandSettingsDragDrop(){
+  const list=document.getElementById('candSettingsList');if(!list)return;let si=null;
+  list.addEventListener('dragstart',e=>{const item=e.target.closest('.settings-item');if(!item)return;si=parseInt(item.dataset.index);setTimeout(()=>item.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
+  list.addEventListener('dragend',()=>{list.querySelectorAll('.settings-item').forEach(el=>el.classList.remove('dragging','drag-over'));});
+  list.addEventListener('dragover',e=>{e.preventDefault();const item=e.target.closest('.settings-item');if(!item)return;list.querySelectorAll('.settings-item').forEach(el=>el.classList.remove('drag-over'));item.classList.add('drag-over');});
+  list.addEventListener('dragleave',e=>{const item=e.target.closest('.settings-item');if(item&&!item.contains(e.relatedTarget))item.classList.remove('drag-over');});
+  list.addEventListener('drop',async e=>{e.preventDefault();const item=e.target.closest('.settings-item');if(!item)return;item.classList.remove('drag-over');const ti=parseInt(item.dataset.index);if(si===null||si===ti){si=null;return;}const[moved]=APP.candidates.splice(si,1);APP.candidates.splice(ti,0,moved);si=null;await saveData();render();});
+}
+function setupItemDragDrop(){
+  ['political','election'].forEach(type=>{
+    const list=document.getElementById(type==='political'?'pItemList':'eItemList');if(!list)return;
+    list.addEventListener('dragstart',e=>{const item=e.target.closest('.settings-item');if(!item)return;itemDragSrc={type,i:parseInt(item.dataset.index)};setTimeout(()=>item.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
+    list.addEventListener('dragend',()=>{list.querySelectorAll('.settings-item').forEach(el=>el.classList.remove('dragging','drag-over'));});
+    list.addEventListener('dragover',e=>{e.preventDefault();const item=e.target.closest('.settings-item');if(!item)return;list.querySelectorAll('.settings-item').forEach(el=>el.classList.remove('drag-over'));item.classList.add('drag-over');});
+    list.addEventListener('dragleave',e=>{const item=e.target.closest('.settings-item');if(item&&!item.contains(e.relatedTarget))item.classList.remove('drag-over');});
+    list.addEventListener('drop',async e=>{e.preventDefault();const item=e.target.closest('.settings-item');if(!item)return;item.classList.remove('drag-over');const ti=parseInt(item.dataset.index);if(!itemDragSrc||itemDragSrc.type!==type||itemDragSrc.i===ti){itemDragSrc=null;return;}const arr=APP.items[type];const[moved]=arr.splice(itemDragSrc.i,1);arr.splice(ti,0,moved);itemDragSrc=null;await saveData();render();});
+  });
+}
+
+async function exportExcel(){
+  if(!window.XLSX){showToast('読み込み中...');await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+  const wb=XLSX.utils.book_new();const sL=['未着手','進行中','完了','不要'];
+  APP.candidates.forEach(c=>{
+    const all=[...APP.items.political,...APP.items.election];
+    const wsData=[[c.name||'',c.electionType||'',c.area||'',c.catchphrase||''],[],['項目','カテゴリ','ステータス','担当者','メモ']];
+    APP.items.political.forEach(item=>{const p=APP.progress[`${c.id}__${item}`]||{status:0};wsData.push([item,'政治活動',sL[p.status],p.assignee||'',p.memo||'']);});
+    APP.items.election.forEach(item=>{const p=APP.progress[`${c.id}__${item}`]||{status:0};wsData.push([item,'選挙活動',sL[p.status],p.assignee||'',p.memo||'']);});
+    const done=all.filter(item=>(APP.progress[`${c.id}__${item}`]||{}).status===2).length;
+    const skip=all.filter(item=>(APP.progress[`${c.id}__${item}`]||{}).status===3).length;
+    const eff=all.length-skip;
+    wsData.push([],[`完了率: ${eff>0?Math.round(done/eff*100):100}% (${done}/${eff}件)`]);
+    const ws=XLSX.utils.aoa_to_sheet(wsData);ws['!cols']=[{wch:24},{wch:10},{wch:10},{wch:12},{wch:30}];
+    XLSX.utils.book_append_sheet(wb,ws,(c.name||'候補者').slice(0,28).replace(/[\\/*?:\[\]]/g,'_'));
+  });
+  const sumData=[['候補者名','選挙種類','選挙区','完了率','完了','進行中','未着手','不要']];
+  APP.candidates.forEach(c=>{const all=[...APP.items.political,...APP.items.election];let done=0,doing=0,none=0,skip=0;all.forEach(item=>{const s=(APP.progress[`${c.id}__${item}`]||{}).status||0;if(s===2)done++;else if(s===1)doing++;else if(s===3)skip++;else none++;});const eff=all.length-skip;sumData.push([c.name||'',c.electionType||'',c.area||'',`${eff>0?Math.round(done/eff*100):100}%`,done,doing,none,skip]);});
+  const wsSummary=XLSX.utils.aoa_to_sheet(sumData);wsSummary['!cols']=[{wch:16},{wch:12},{wch:16},{wch:8},{wch:6},{wch:8},{wch:8},{wch:6}];
+  XLSX.utils.book_append_sheet(wb,wsSummary,'全体サマリー');
+  XLSX.writeFile(wb,`選挙準備進捗_${PREF_NAME}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast('Excelをダウンロードしました');
+}
+
+function showLoading(show){
+  let el=document.getElementById('loadingOverlay');
+  if(show&&!el){el=document.createElement('div');el.id='loadingOverlay';el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px';el.innerHTML='<div style="width:32px;height:32px;border:3px solid #f77f00;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite"></div><div style="color:#e8e0d0;font-size:12px">読み込み中...</div>';document.body.appendChild(el);const s=document.createElement('style');s.textContent='@keyframes spin{to{transform:rotate(360deg)}}';document.head.appendChild(s);}
+  else if(!show&&el)el.remove();
+}
+function showToast(msg,isError=false){const t=document.createElement('div');t.style.cssText=`position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${isError?'#e74c3c':'#f77f00'};color:white;padding:8px 16px;border-radius:8px;font-size:13px;z-index:400;font-weight:600`;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+</script>
+</body>
+</html>

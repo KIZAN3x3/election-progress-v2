@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>選挙準備管理 - 管理者</title>
+<style>
+:root{--bg:#0f0e0c;--surface:#1a1710;--surface2:#221f18;--border:#2e2820;--accent:#f77f00;--accent2:#e05c00;--text:#e8e0d0;--text2:#b5a890;--text3:#857060;--done:#2ecc71;--danger:#e74c3c;--radius:12px;--radius-sm:8px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Hiragino Sans','Noto Sans JP',sans-serif;min-height:100vh;}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{background:var(--surface);border-radius:var(--radius);padding:40px;width:100%;max-width:380px;}
+.login-logo{font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;}
+.login-sub{color:var(--text3);font-size:13px;margin-bottom:28px;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:600;}
+.form-group input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 12px;font-size:14px;font-family:inherit;outline:none;}
+.form-group input:focus{border-color:var(--accent);}
+.btn{padding:10px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-primary{background:var(--accent);color:white;width:100%;padding:12px;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-secondary{background:var(--surface2);color:var(--text2);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.login-error{color:var(--danger);font-size:13px;margin-top:8px;text-align:center;}
+.app-header{padding:14px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.app-header h1{font-size:16px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.admin-badge{background:rgba(247,127,0,.2);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--accent);font-weight:600;}
+.header-right{margin-left:auto;}
+.tabs{display:flex;gap:4px;padding:14px 20px 0;}
+.tab{padding:8px 16px;border-radius:10px 10px 0 0;font-size:13px;font-weight:600;cursor:pointer;color:var(--text3);background:transparent;border:none;transition:all .2s;}
+.tab.active{background:var(--surface);color:var(--text);}
+.content{background:var(--surface);border-radius:0 var(--radius) var(--radius) var(--radius);margin:0 20px 20px;padding:20px;min-height:calc(100vh - 155px);}
+.pref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:9px;}
+.pref-card{background:var(--surface2);border-radius:var(--radius-sm);padding:13px;cursor:pointer;transition:all .15s;border:1px solid transparent;}
+.pref-card:hover{border-color:var(--accent);}
+.pref-name{font-size:13px;font-weight:700;margin-bottom:3px;}
+.pref-status{font-size:11px;color:var(--text3);}
+.settings-item{background:var(--surface2);border-radius:var(--radius-sm);padding:11px 13px;display:flex;align-items:center;gap:9px;}
+.settings-item-info{flex:1;}
+.settings-item-name{font-size:13px;font-weight:600;}
+.settings-item-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.modal{background:var(--surface2);border-radius:var(--radius);width:100%;max-width:420px;padding:24px;}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:16px;}
+.modal-footer{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;}
+</style>
+</head>
+<body>
+<div id="loginScreen" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">🗳 選挙準備管理</div>
+    <div class="login-sub">管理者ログイン</div>
+    <div class="form-group">
+      <label>管理者パスワード</label>
+      <input type="password" id="adminPw" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')loginAdmin()">
+    </div>
+    <button class="btn btn-primary" onclick="loginAdmin()">ログイン</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+<div id="appScreen" style="display:none">
+  <div class="app-header">
+    <h1>🗳 選挙準備管理</h1>
+    <div class="admin-badge">全体管理者</div>
+    <div class="header-right"><button class="btn btn-secondary" onclick="logout()" style="font-size:11px;padding:5px 9px">ログアウト</button></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('prefs')">都道府県一覧</button>
+    <button class="tab" onclick="switchTab('passwords')">パスワード管理</button>
+  </div>
+  <div class="content" id="mainContent"></div>
+</div>
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalBox" onclick="event.stopPropagation()"></div>
+</div>
+<script src="../config.js"></script>
+<script>
+const ADMIN_PASSWORD='admin2024sanseito';
+const PREFECTURES=[{code:'hokkaido',name:'北海道'},{code:'aomori',name:'青森県'},{code:'iwate',name:'岩手県'},{code:'miyagi',name:'宮城県'},{code:'akita',name:'秋田県'},{code:'yamagata',name:'山形県'},{code:'fukushima',name:'福島県'},{code:'ibaraki',name:'茨城県'},{code:'tochigi',name:'栃木県'},{code:'gunma',name:'群馬県'},{code:'saitama',name:'埼玉県'},{code:'chiba',name:'千葉県'},{code:'tokyo',name:'東京都'},{code:'kanagawa',name:'神奈川県'},{code:'niigata',name:'新潟県'},{code:'toyama',name:'富山県'},{code:'ishikawa',name:'石川県'},{code:'fukui',name:'福井県'},{code:'yamanashi',name:'山梨県'},{code:'nagano',name:'長野県'},{code:'gifu',name:'岐阜県'},{code:'shizuoka',name:'静岡県'},{code:'aichi',name:'愛知県'},{code:'mie',name:'三重県'},{code:'shiga',name:'滋賀県'},{code:'kyoto',name:'京都府'},{code:'osaka',name:'大阪府'},{code:'hyogo',name:'兵庫県'},{code:'nara',name:'奈良県'},{code:'wakayama',name:'和歌山県'},{code:'tottori',name:'鳥取県'},{code:'shimane',name:'島根県'},{code:'okayama',name:'岡山県'},{code:'hiroshima',name:'広島県'},{code:'yamaguchi',name:'山口県'},{code:'tokushima',name:'徳島県'},{code:'kagawa',name:'香川県'},{code:'ehime',name:'愛媛県'},{code:'kochi',name:'高知県'},{code:'fukuoka',name:'福岡県'},{code:'saga',name:'佐賀県'},{code:'nagasaki',name:'長崎県'},{code:'kumamoto',name:'熊本県'},{code:'oita',name:'大分県'},{code:'miyazaki',name:'宮崎県'},{code:'kagoshima',name:'鹿児島県'},{code:'okinawa',name:'沖縄県'}];
+let currentTab='prefs';
+async function sbFetch(t,m='GET',b=null,q=''){const r=await fetch(`${SUPABASE_URL}/rest/v1/${t}${q}`,{method:m,headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':m==='POST'?'resolution=merge-duplicates':''},body:b?JSON.stringify(b):null});if(m==='GET')return r.json();return r;}
+async function hashPassword(pw){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw+'sanseito_salt'));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+function loginAdmin(){const pw=document.getElementById('adminPw').value;if(pw!==ADMIN_PASSWORD){document.getElementById('loginError').textContent='パスワードが違います';return;}document.getElementById('loginScreen').style.display='none';document.getElementById('appScreen').style.display='block';render();}
+function logout(){document.getElementById('appScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('adminPw').value='';}
+function switchTab(tab){currentTab=tab;document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['prefs','passwords'][i]===tab));render();}
+async function render(){if(currentTab==='prefs')await renderPrefs();else await renderPasswords();}
+async function renderPrefs(){
+  const el=document.getElementById('mainContent');
+  el.innerHTML='<div style="color:var(--text3);font-size:13px;margin-bottom:14px">クリックするとそのエリアのページへ移動します</div><div class="pref-grid" id="prefGrid"><div style="color:var(--text3)">読み込み中...</div></div>';
+  const prefs=await sbFetch('prefectures','GET',null,'');
+  const pwMap={};(prefs||[]).forEach(p=>{pwMap[p.code]=p;});
+  document.getElementById('prefGrid').innerHTML=PREFECTURES.map(p=>`<div class="pref-card" onclick="window.open('../${p.code}/','_blank')"><div class="pref-name">${p.name}</div><div class="pref-status">${pwMap[p.code]?'🔐 設定済み':'⚠ 未設定'}</div></div>`).join('');
+}
+async function renderPasswords(){
+  const el=document.getElementById('mainContent');
+  el.innerHTML='<div style="color:var(--text3);font-size:13px;margin-bottom:14px">各都道府県のパスワードを設定してください</div><div id="pwList">読み込み中...</div>';
+  const prefs=await sbFetch('prefectures','GET',null,'');
+  const pwMap={};(prefs||[]).forEach(p=>{pwMap[p.code]=p;});
+  document.getElementById('pwList').innerHTML=`
+    <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:18px;margin-bottom:18px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px">一括設定</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">全県のパスワードを「県slug + suffix」で一括設定します。<br>例: suffixが「123123」→ aichi123123、tokyo123123</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:12px;color:var(--text2);white-space:nowrap">県slug +</span>
+        <input id="bulkSuffix" placeholder="例: 123123" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:8px 10px;font-size:13px;outline:none">
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="previewBulk()">プレビュー &amp; 設定</button>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;letter-spacing:.08em">個別設定</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px">
+      ${PREFECTURES.map(p=>`<div class="settings-item"><div class="settings-item-info"><div class="settings-item-name">${p.name}</div><div class="settings-item-sub">${pwMap[p.code]?'🔐 設定済み':'未設定'} <span style="color:var(--text3);font-size:10px">${p.code}</span></div></div><button class="btn btn-secondary btn-sm" onclick="openSetPwModal('${p.code}','${p.name}')">${pwMap[p.code]?'変更':'設定'}</button></div>`).join('')}
+    </div>`;
+}
+function openModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalOverlay').style.display='flex';}
+function closeModal(){document.getElementById('modalOverlay').style.display='none';}
+function openSetPwModal(code,name){openModal(`<h3>${name} のパスワード設定</h3><div class="form-group"><label>新しいパスワード</label><input type="password" id="newPw" placeholder="パスワードを入力"></div><div class="form-group"><label>確認</label><input type="password" id="newPwConfirm" placeholder="もう一度入力"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">キャンセル</button><button class="btn btn-primary" onclick="savePw('${code}','${name}')">保存</button></div>`);}
+async function savePw(code,name){const pw=document.getElementById('newPw').value,pw2=document.getElementById('newPwConfirm').value;if(!pw){showToast('パスワードを入力してください',true);return;}if(pw!==pw2){showToast('パスワードが一致しません',true);return;}const hash=await hashPassword(pw);await sbFetch('prefectures','POST',{code,name,password_hash:hash});closeModal();showToast(`${name}のパスワードを設定しました`);renderPasswords();}
+
+function previewBulk(){
+  const suffix=document.getElementById('bulkSuffix').value.trim();
+  if(!suffix){showToast('suffixを入力してください',true);return;}
+  const preview=PREFECTURES.slice(0,5).map(p=>`${p.code}${suffix}`).join('、')+' ...');
+  openModal(`<h3>一括設定のプレビュー</h3>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">以下のパスワードで全県（47都道府県）を設定します</div>
+    <div style="background:var(--surface);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;font-size:12px;line-height:1.8">
+      ${PREFECTURES.map(p=>`<div><span style="color:var(--text2);min-width:80px;display:inline-block">${p.name}</span> → <span style="color:var(--accent)">${p.code}${suffix}</span></div>`).join('')}
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveBulkSlug('${suffix}')">この内容で全県設定</button>
+    </div>`);
+}
+
+async function saveBulkSlug(suffix){
+  showLoading(true);
+  for(const p of PREFECTURES){
+    const pw=p.code+suffix;
+    const hash=await hashPassword(pw);
+    await sbFetch('prefectures','POST',{code:p.code,name:p.name,password_hash:hash});
+  }
+  showLoading(false);closeModal();showToast('全県のパスワードを設定しました');renderPasswords();
+}
+function showLoading(show){let el=document.getElementById('lo');if(show&&!el){el=document.createElement('div');el.id='lo';el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:center;justify-content:center;';el.innerHTML='<div style="width:32px;height:32px;border:3px solid #f77f00;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite"></div>';document.body.appendChild(el);const s=document.createElement('style');s.textContent='@keyframes spin{to{transform:rotate(360deg)}}';document.head.appendChild(s);}else if(!show&&el)el.remove();}
+function showToast(msg,isError=false){const t=document.createElement('div');t.style.cssText=`position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${isError?'#e74c3c':'#f77f00'};color:white;padding:8px 16px;border-radius:8px;font-size:13px;z-index:400;font-weight:600`;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+</script>
+</body>
+</html>
