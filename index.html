@@ -5,78 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>選挙準備管理 v2</title>
 <style>
-:root{--bg:#0f0e0c;--accent:#f77f00;--accent2:#e05c00;--text:#e8e0d0;--text2:#b5a890;--text3:#857060;--surface:#1a1710;--surface2:#221f18;--border:#2e2820;--radius:12px;}
+:root{--bg:#0f0e0c;--accent:#f77f00;--accent2:#e05c00;--text:#e8e0d0;--text2:#b5a890;--text3:#857060;--surface:#1a1710;--surface2:#221f18;--border:#2e2820;--radius:12px;--radius-sm:8px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Hiragino Sans','Noto Sans JP',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
-.wrap{text-align:center;max-width:400px;width:100%;}
+.wrap{text-align:center;max-width:360px;width:100%;}
 .logo{font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;}
 .sub{color:var(--text3);font-size:13px;margin-bottom:40px;}
-.btn{display:block;width:100%;padding:14px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;border:none;text-decoration:none;margin-bottom:12px;transition:all .15s;}
-.btn-admin{background:var(--accent);color:white;}
-.btn-admin:hover{background:var(--accent2);}
-.btn-pref{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
-.btn-pref:hover{color:var(--text);border-color:var(--accent);}
-.divider{color:var(--text3);font-size:12px;margin:20px 0;}
-.pref-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
-.pref-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 4px;font-size:11px;color:var(--text2);cursor:pointer;text-decoration:none;transition:all .15s;text-align:center;}
-.pref-btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn{display:block;width:100%;padding:14px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;border:none;text-decoration:none;transition:all .15s;background:var(--accent);color:white;}
+.btn:hover{background:var(--accent2);}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="logo">🗳 選挙準備管理</div>
   <div class="sub">参政党 選挙準備進捗管理システム v2</div>
-  <a class="btn btn-admin" href="admin/">管理者ログイン</a>
-  <div class="divider">— 都道府県ユーザー —</div>
-  <div class="pref-grid">
-    <a class="pref-btn" href="hokkaido/">北海道</a>
-    <a class="pref-btn" href="aomori/">青森県</a>
-    <a class="pref-btn" href="iwate/">岩手県</a>
-    <a class="pref-btn" href="miyagi/">宮城県</a>
-    <a class="pref-btn" href="akita/">秋田県</a>
-    <a class="pref-btn" href="yamagata/">山形県</a>
-    <a class="pref-btn" href="fukushima/">福島県</a>
-    <a class="pref-btn" href="ibaraki/">茨城県</a>
-    <a class="pref-btn" href="tochigi/">栃木県</a>
-    <a class="pref-btn" href="gunma/">群馬県</a>
-    <a class="pref-btn" href="saitama/">埼玉県</a>
-    <a class="pref-btn" href="chiba/">千葉県</a>
-    <a class="pref-btn" href="tokyo/">東京都</a>
-    <a class="pref-btn" href="kanagawa/">神奈川県</a>
-    <a class="pref-btn" href="niigata/">新潟県</a>
-    <a class="pref-btn" href="toyama/">富山県</a>
-    <a class="pref-btn" href="ishikawa/">石川県</a>
-    <a class="pref-btn" href="fukui/">福井県</a>
-    <a class="pref-btn" href="yamanashi/">山梨県</a>
-    <a class="pref-btn" href="nagano/">長野県</a>
-    <a class="pref-btn" href="gifu/">岐阜県</a>
-    <a class="pref-btn" href="shizuoka/">静岡県</a>
-    <a class="pref-btn" href="aichi/">愛知県</a>
-    <a class="pref-btn" href="mie/">三重県</a>
-    <a class="pref-btn" href="shiga/">滋賀県</a>
-    <a class="pref-btn" href="kyoto/">京都府</a>
-    <a class="pref-btn" href="osaka/">大阪府</a>
-    <a class="pref-btn" href="hyogo/">兵庫県</a>
-    <a class="pref-btn" href="nara/">奈良県</a>
-    <a class="pref-btn" href="wakayama/">和歌山県</a>
-    <a class="pref-btn" href="tottori/">鳥取県</a>
-    <a class="pref-btn" href="shimane/">島根県</a>
-    <a class="pref-btn" href="okayama/">岡山県</a>
-    <a class="pref-btn" href="hiroshima/">広島県</a>
-    <a class="pref-btn" href="yamaguchi/">山口県</a>
-    <a class="pref-btn" href="tokushima/">徳島県</a>
-    <a class="pref-btn" href="kagawa/">香川県</a>
-    <a class="pref-btn" href="ehime/">愛媛県</a>
-    <a class="pref-btn" href="kochi/">高知県</a>
-    <a class="pref-btn" href="fukuoka/">福岡県</a>
-    <a class="pref-btn" href="saga/">佐賀県</a>
-    <a class="pref-btn" href="nagasaki/">長崎県</a>
-    <a class="pref-btn" href="kumamoto/">熊本県</a>
-    <a class="pref-btn" href="oita/">大分県</a>
-    <a class="pref-btn" href="miyazaki/">宮崎県</a>
-    <a class="pref-btn" href="kagoshima/">鹿児島県</a>
-    <a class="pref-btn" href="okinawa/">沖縄県</a>
-  </div>
+  <a class="btn" href="admin/">管理者ログイン</a>
 </div>
 </body>
 </html>
