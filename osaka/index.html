@@ -66,6 +66,18 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Sans','Noto Sa
 .detail-info .yomi{color:var(--text3);font-size:11px;margin-bottom:4px;}
 .detail-info .etype{color:var(--accent);font-size:11px;background:var(--surface2);padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:5px;}
 .detail-info .catch{color:var(--text2);font-style:italic;font-size:13px;}
+.detail-info .meta{color:var(--text2);font-size:12px;margin-bottom:4px;}
+.detail-info .job{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:4px;}
+.detail-extra{margin-top:18px;padding-top:16px;border-top:1px solid var(--border);}
+.detail-extra-block{margin-bottom:16px;}
+.detail-extra-label{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--text3);margin-bottom:7px;text-transform:uppercase;}
+.policy-tag{display:inline-block;background:var(--surface2);color:var(--accent);font-size:11px;padding:3px 9px;border-radius:10px;margin:0 5px 5px 0;}
+.detail-profile-text,.detail-note-text{font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap;}
+.detail-note-text{background:var(--surface2);padding:10px 12px;border-radius:var(--radius-sm);}
+.detail-contact-item{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text2);margin-bottom:6px;}
+.detail-sns-links{display:flex;gap:8px;flex-wrap:wrap;}
+.sns-link{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);color:var(--accent);font-size:12px;padding:5px 11px;border-radius:20px;text-decoration:none;font-weight:600;}
+.sns-link:hover{background:var(--accent);color:#fff;}
 .detail-section-label{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text3);margin:16px 0 7px;text-transform:uppercase;}
 .detail-item-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:3px;cursor:pointer;transition:background .15s;}
 .detail-item-row:hover{background:#e6e2d8;}
@@ -345,10 +357,16 @@ function candidateCardHTML(c,i){
 
 function onCardClick(e,id){if(dragSrcIndex!==null)return;currentCandidateId=id;renderCandidateDetail();}
 
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
 function renderCandidateDetail(){
   const c=APP.candidates.find(x=>x.id===currentCandidateId);if(!c)return;
   const prog=getProgress(c.id);
   const av=c.photo?`<img src="${c.photo}">`:`<span>${getInitial(c.name)}</span>`;
+  const metaParts=[];
+  if(c.age)metaParts.push(`${escapeHTML(c.age)}歳`);
+  if(c.gender)metaParts.push(escapeHTML(c.gender));
+  if(c.area)metaParts.push(escapeHTML(c.area));
   document.getElementById('mainContent').innerHTML=`
     <button class="back-btn" onclick="currentCandidateId=null;render()">← 候補者一覧に戻る</button>
     <div class="detail-header">
@@ -357,6 +375,8 @@ function renderCandidateDetail(){
         <div class="yomi">${c.yomi||''}</div>
         <h2>${c.name||'（名前未設定）'}</h2>
         ${c.electionType?`<div class="etype">${c.electionType}</div>`:''}
+        ${metaParts.length?`<div class="meta">${metaParts.join(' ・ ')}</div>`:''}
+        ${c.job?`<div class="job">${escapeHTML(c.job)}</div>`:''}
         ${c.catchphrase?`<div class="catch">「${c.catchphrase}」</div>`:''}
         <div style="margin-top:7px;width:140px">
           <div class="card-progress"><div class="card-progress-bar" style="width:${prog}%"></div></div>
@@ -364,10 +384,31 @@ function renderCandidateDetail(){
         </div>
       </div>
     </div>
+    ${detailExtraHTML(c)}
     <div class="detail-section-label">政治活動</div>
     ${APP.items.political.map(item=>detailItemRowHTML(c.id,item)).join('')}
     <div class="detail-section-label">選挙活動</div>
     ${APP.items.election.map(item=>detailItemRowHTML(c.id,item)).join('')}`;
+}
+
+function detailExtraHTML(c){
+  const blocks=[];
+  if(c.policy){
+    const tags=c.policy.split(',').map(s=>s.trim()).filter(Boolean);
+    if(tags.length)blocks.push(`<div class="detail-extra-block"><div class="detail-extra-label">政策テーマ</div><div>${tags.map(t=>`<span class="policy-tag">${escapeHTML(t)}</span>`).join('')}</div></div>`);
+  }
+  if(c.profile)blocks.push(`<div class="detail-extra-block"><div class="detail-extra-label">プロフィール</div><div class="detail-profile-text">${escapeHTML(c.profile)}</div></div>`);
+  const contactRows=[];
+  if(c.tel)contactRows.push(`<div class="detail-contact-item">📞 ${escapeHTML(c.tel)}</div>`);
+  if(c.email)contactRows.push(`<div class="detail-contact-item">✉️ ${escapeHTML(c.email)}</div>`);
+  if(c.address)contactRows.push(`<div class="detail-contact-item">📍 ${escapeHTML(c.address)}</div>`);
+  if(contactRows.length)blocks.push(`<div class="detail-extra-block"><div class="detail-extra-label">連絡先</div>${contactRows.join('')}</div>`);
+  const snsDefs=[['sns_x','X'],['sns_ig','Instagram'],['sns_yt','YouTube'],['sns_tt','TikTok'],['sns_fb','Facebook']];
+  const snsLinks=snsDefs.filter(([k])=>c[k]).map(([k,label])=>`<a class="sns-link" href="${escapeHTML(c[k])}" target="_blank" rel="noopener">${label}</a>`);
+  if(snsLinks.length)blocks.push(`<div class="detail-extra-block"><div class="detail-extra-label">SNS</div><div class="detail-sns-links">${snsLinks.join('')}</div></div>`);
+  if(c.note)blocks.push(`<div class="detail-extra-block"><div class="detail-extra-label">備考</div><div class="detail-note-text">${escapeHTML(c.note)}</div></div>`);
+  if(!blocks.length)return '';
+  return `<div class="detail-extra">${blocks.join('')}</div>`;
 }
 
 function detailItemRowHTML(cid,item){
