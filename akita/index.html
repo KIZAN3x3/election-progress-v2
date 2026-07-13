@@ -8,7 +8,7 @@
 :root {
   --bg:#ffffff;--surface:#f5f5f5;--surface2:#ececec;--border:#ddd9d0;
   --accent:#f77f00;--accent2:#e05c00;--text:#1a1a1a;--text2:#5c5650;--text3:#8c8478;
-  --done:#2ecc71;--doing:#f39c12;--none:#ddd9d0;--skip:#ddd9d0;--skip-text:#8a7a6a;
+  --done:#2ecc71;--doing:#f39c12;--none:#ddd9d0;--skip:#f4c2c2;--skip-text:#b04040;
   --danger:#e74c3c;--radius:12px;--radius-sm:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -651,6 +651,12 @@ function setupDragDrop(){
   grid.addEventListener('dragover',e=>{e.preventDefault();const card=e.target.closest('.candidate-card');if(!card)return;grid.querySelectorAll('.candidate-card').forEach(c=>c.classList.remove('drag-over'));card.classList.add('drag-over');});
   grid.addEventListener('dragleave',e=>{const card=e.target.closest('.candidate-card');if(card&&!card.contains(e.relatedTarget))card.classList.remove('drag-over');});
   grid.addEventListener('drop',async e=>{e.preventDefault();const card=e.target.closest('.candidate-card');if(!card)return;card.classList.remove('drag-over');const ti=parseInt(card.dataset.index);if(dragSrcIndex===null||dragSrcIndex===ti)return;const[moved]=APP.candidates.splice(dragSrcIndex,1);APP.candidates.splice(ti,0,moved);dragSrcIndex=null;await saveData();render();});
+  let tSrc=null,tGhost=null,tTimer=null,tPos=null,tOff=null;
+  grid.addEventListener('touchstart',e=>{const card=e.target.closest('.candidate-card');if(!card)return;const t=e.touches[0];tPos={x:t.clientX,y:t.clientY};tTimer=setTimeout(()=>{tSrc=parseInt(card.dataset.index);const rect=card.getBoundingClientRect();tOff={x:tPos.x-rect.left,y:tPos.y-rect.top};tGhost=card.cloneNode(true);Object.assign(tGhost.style,{position:'fixed',pointerEvents:'none',zIndex:'1000',opacity:'0.85',width:rect.width+'px',left:rect.left+'px',top:rect.top+'px',transform:'scale(1.05)',boxShadow:'0 8px 24px rgba(0,0,0,.25)',transition:'none'});document.body.appendChild(tGhost);card.style.opacity='0.3';if(navigator.vibrate)navigator.vibrate(50);},500);},{passive:true});
+  grid.addEventListener('touchmove',e=>{if(tTimer&&tPos){const dx=Math.abs(e.touches[0].clientX-tPos.x),dy=Math.abs(e.touches[0].clientY-tPos.y);if(dx>8||dy>8){clearTimeout(tTimer);tTimer=null;}}if(tSrc===null||!tGhost)return;e.preventDefault();const t=e.touches[0];tGhost.style.left=(t.clientX-tOff.x)+'px';tGhost.style.top=(t.clientY-tOff.y)+'px';const below=document.elementFromPoint(t.clientX,t.clientY);grid.querySelectorAll('.candidate-card').forEach(c=>c.classList.remove('drag-over'));const tc=below&&below.closest&&below.closest('.candidate-card');if(tc&&parseInt(tc.dataset.index)!==tSrc)tc.classList.add('drag-over');},{passive:false});
+  const endTouch=async e=>{clearTimeout(tTimer);tTimer=null;tPos=null;if(tSrc===null)return;e.preventDefault();grid.querySelectorAll('.candidate-card').forEach(c=>{c.classList.remove('drag-over');c.style.opacity='';});if(tGhost){tGhost.remove();tGhost=null;}const src=tSrc;tSrc=null;const ch=e.changedTouches;if(!ch||!ch[0])return;const below=document.elementFromPoint(ch[0].clientX,ch[0].clientY);const tc=below&&below.closest&&below.closest('.candidate-card');if(tc){const ti=parseInt(tc.dataset.index);if(ti!==src){const[moved]=APP.candidates.splice(src,1);APP.candidates.splice(ti,0,moved);await saveData();render();}}};
+  grid.addEventListener('touchend',endTouch,{passive:false});
+  grid.addEventListener('touchcancel',endTouch,{passive:false});
 }
 function setupCandSettingsDragDrop(){
   const list=document.getElementById('candSettingsList');if(!list)return;let si=null;
