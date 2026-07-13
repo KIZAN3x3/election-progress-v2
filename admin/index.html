@@ -95,14 +95,14 @@ async function renderPrefs(){
   const el=document.getElementById('mainContent');
   el.innerHTML='<div style="color:var(--text3);font-size:13px;margin-bottom:14px">クリックするとそのエリアのページへ移動します</div><div class="pref-grid" id="prefGrid"><div style="color:var(--text3)">読み込み中...</div></div>';
   const prefs=await sbFetch('prefectures','GET',null,'');
-  const pwMap={};(prefs||[]).forEach(p=>{pwMap[p.code]=p;});
+  const pwMap={};(prefs||[]).filter(p=>p.code!=='test').forEach(p=>{pwMap[p.code]=p;});
   document.getElementById('prefGrid').innerHTML=PREFECTURES.map(p=>`<div class="pref-card" onclick="window.open('../${p.code}/','_blank')"><div class="pref-name">${p.name}</div><div class="pref-status">${pwMap[p.code]?'🔐 設定済み':'⚠ 未設定'}</div></div>`).join('');
 }
 async function renderPasswords(){
   const el=document.getElementById('mainContent');
   el.innerHTML='<div style="color:var(--text3);font-size:13px;margin-bottom:14px">各都道府県のパスワードを設定してください</div><div id="pwList">読み込み中...</div>';
   const prefs=await sbFetch('prefectures','GET',null,'');
-  const pwMap={};(prefs||[]).forEach(p=>{pwMap[p.code]=p;});
+  const pwMap={};(prefs||[]).filter(p=>p.code!=='test').forEach(p=>{pwMap[p.code]=p;});
   const prefItems=PREFECTURES.map(p=>{
     const set=pwMap[p.code]?'🔐 設定済み':'未設定';
     const btn=pwMap[p.code]?'変更':'設定';
