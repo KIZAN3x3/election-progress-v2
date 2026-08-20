@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "no records to sync" }, 400);
   }
 
-  const results: Array<{ candidate_code: string; status: string; synced?: number; error?: string }> = [];
+  const results: Array<{ candidate_code: string; status: string; synced?: number; deleted?: number; error?: string }> = [];
 
   for (const record of records) {
     const { candidate_code, period, items } = record;
@@ -84,26 +84,61 @@ Deno.serve(async (req) => {
       continue;
     }
 
-    const rows = items.map((item, index) => ({
-      candidate_id: candidate.id,
-      period,
-      item_name: item.item_name,
-      required: item.required ?? true,
-      status: item.status,
-      sort_order: index,
-      updated_at: new Date().toISOString(),
-    }));
+    const itemNameSet = new Set(items.map((item) => item.item_name));
 
-    const { error: upsertError } = await supabase
+    const { data: existingRows, error: existingError } = await supabase
       .from("v3_progress")
-      .upsert(rows, { onConflict: "candidate_id,period,item_name" });
+      .select("item_name")
+      .eq("candidate_id", candidate.id)
+      .eq("period", period);
 
-    if (upsertError) {
-      results.push({ candidate_code, status: "error", error: upsertError.message });
+    if (existingError) {
+      results.push({ candidate_code, status: "error", error: existingError.message });
       continue;
     }
 
-    results.push({ candidate_code, status: "ok", synced: rows.length });
+    const staleNames = (existingRows ?? [])
+      .map((row) => row.item_name)
+      .filter((name) => !itemNameSet.has(name));
+
+    if (staleNames.length > 0) {
+      const { error: deleteError } = await supabase
+        .from("v3_progress")
+        .delete()
+        .eq("candidate_id", candidate.id)
+        .eq("period", period)
+        .in("item_name", staleNames);
+
+      if (deleteError) {
+        results.push({ candidate_code, status: "error", error: deleteError.message });
+        continue;
+      }
+    }
+
+    let syncedCount = 0;
+    if (items.length > 0) {
+      const rows = items.map((item, index) => ({
+        candidate_id: candidate.id,
+        period,
+        item_name: item.item_name,
+        required: item.required ?? true,
+        status: item.status,
+        sort_order: index,
+        updated_at: new Date().toISOString(),
+      }));
+
+      const { error: upsertError } = await supabase
+        .from("v3_progress")
+        .upsert(rows, { onConflict: "candidate_id,period,item_name" });
+
+      if (upsertError) {
+        results.push({ candidate_code, status: "error", error: upsertError.message });
+        continue;
+      }
+      syncedCount = rows.length;
+    }
+
+    results.push({ candidate_code, status: "ok", synced: syncedCount, deleted: staleNames.length });
   }
 
   const hasError = results.some((r) => r.status === "error");
